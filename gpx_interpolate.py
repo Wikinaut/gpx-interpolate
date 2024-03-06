@@ -16,11 +16,11 @@ EARTH_RADIUS = 6371e3 # meters
 EPS = 1e-6 # seconds
 
 # functions
-def gpx_interpolate(gpx_data: GPXData, res: float = 1.0, num: Optional[int] = None) -> GPXData:
+def gpx_interpolate(gpx_data: GPXData, distance: float = 1.0, num: Optional[int] = None) -> GPXData:
     """
-    Returns gpx_data interpolated with a spatial resolution res using piecewise cubic Hermite splines.
+    Returns gpx_data interpolated with a spatial resolution distance using piecewise cubic Hermite splines.
 
-    if num is passed, gpx_data is interpolated to num points and res is ignored.
+    if num is passed, gpx_data is interpolated to num points and distance is ignored.
     """
 
     if all(gpx_data[i] in (None, []) for i in ('lat', 'lon', 'ele', 'tstamp')):
@@ -32,7 +32,7 @@ def gpx_interpolate(gpx_data: GPXData, res: float = 1.0, num: Optional[int] = No
     xi = np.cumsum(_gpx_dist)
     yi = np.array([_gpx_data[i] for i in ('lat', 'lon', 'ele', 'tstamp') if _gpx_data[i]])
 
-    num = num if num is not None else int(np.ceil(xi[-1]/res))
+    num = num if num is not None else int(np.ceil(xi[-1]/distance))
 
     x = np.linspace(xi[0], xi[-1], num=num, endpoint=True)
     y = pchip_interpolate(xi, yi, x, axis=1)
@@ -202,9 +202,12 @@ def main():
     parser = argparse.ArgumentParser(description='interpolate GPX files using piecewise cubic Hermite splines')
 
     parser.add_argument('gpx_files', metavar='FILE', nargs='+', help='GPX file')
-    parser.add_argument('-r', '--res', type=float, default=1.0, help='interpolation resolution in meters (default: 1)')
+    parser.add_argument('-d', '--distance', type=float, default=1.0, help='set fixed distance (interpolation resolution) between track points [m] (default: 1)')
     parser.add_argument('-n', '--num', type=int, default=None, help='force point count in output (default: disabled)')
     parser.add_argument('-s', '--speed', action='store_true', help='save interpolated speed')
+    parser.add_argument('-i', '--intervaltime', type=float, help='set constant time interval [s] between track points')
+    parser.add_argument('-v', '--velocity', type=float, help='set constant velocity [m/s] between track points')
+    parser.add_argument('-b', '--begintime', type=float, help='set track begin time')
 
     args = parser.parse_args()
 
@@ -219,7 +222,7 @@ def main():
             if not len(gpx_data_nodup['lat']) == len(gpx_data['lat']):
                 print('Removed {} duplicate trackpoint(s)'.format(len(gpx_data['lat'])-len(gpx_data_nodup['lat'])))
 
-            gpx_data_interp = gpx_interpolate(gpx_data_nodup, args.res, args.num)
+            gpx_data_interp = gpx_interpolate(gpx_data_nodup, args.distance, args.num)
 
             output_file = '{}_interpolated.gpx'.format(gpx_file[:-4])
 
