@@ -1,11 +1,11 @@
 # imports
+
+# Source github.com/remisalmon/gpx-interpolate
+
 import gpxpy
-
 import numpy as np
-
 from datetime import datetime, tzinfo
 from typing import Dict, List, Union, Optional
-
 from scipy.interpolate import pchip_interpolate
 
 # types
