@@ -8,18 +8,25 @@ Interpolates latitude, longitude, elevation and speed at any spatial resolution.
 
 ### Script
 ```
-usage: gpx_interpolate.py [-h] [-r RES] [-n NUM] [-s] FILE [FILE ...]
+usage: gpx_interpolate.py [-h] [-d DISTANCE] [-n NUM] [-i INTERVALTIME] [-v VELOCITY] [-s] [-b BEGINTIME] FILE [FILE ...]
 
 interpolate GPX files using piecewise cubic Hermite splines
 
 positional arguments:
-  FILE               GPX file
+  FILE                  GPX file
 
-optional arguments:
-  -h, --help         show this help message and exit
-  -r RES, --res RES  interpolation resolution in meters (default: 1)
-  -n NUM, --num NUM  force point count in output (default: disabled)
-  -s, --speed        save interpolated speed
+options:
+  -h, --help            show this help message and exit
+  -d DISTANCE, --distance DISTANCE
+                        set constant distance (interpolation resolution) between track points [m] (default: 1 m)
+  -n NUM, --num NUM     force number of track points (default: disabled)
+  -i INTERVALTIME, --intervaltime INTERVALTIME
+                        set constant time interval [s] between track points
+  -v VELOCITY, --velocity VELOCITY
+                        set constant velocity [m/s] between track points
+  -s, --speed           add speed data to track
+  -b BEGINTIME, --begintime BEGINTIME
+                        set track begin time UTC [YYYYMMDD-HHMMSSZ]
 ```
 
 ### Module
@@ -32,7 +39,7 @@ gpx_data = {'lat':lat,
             'tstamp':tstamp,
             'tzinfo':tzinfo}
 
-gpx_data_interp = gpx_interpolate(gpx_data, res=1.0)
+gpx_data_interp = gpx_interpolate(gpx_data, distance=1.0)
 ```
 
 where:
@@ -40,7 +47,7 @@ where:
 * `ele` (optional) is the trackpoints elevation (in meter)
 * `tstamp` (optional) is the trackpoints timestamps (in second)
 * `tzinfo` (optional) is the trackpoints timezone as a `datetime.tzinfo` subclass instance (`None` for UTC)
-* `res` is the interpolation resolution in meters (`1.0` by default, disabled if `num` is passed)
+* `distance` is the interpolation resolution in meters (`1.0` by default, disabled if `num` is passed)
 * `num` (optional) is the number of trackpoints of the interpolated data (`None` by default)
 
 `ele`, `tstamp` and `tzinfo` are optional and can be set to `None`.
