@@ -159,7 +159,7 @@ def gpx_read(gpx_file: str) -> GPXData:
     return gpx_data
 
 
-def gpx_write(gpx_file: str, gpx_data: GPXData, write_speed: bool = False) -> None:
+def gpx_write(gpx_file: str, gpx_data: GPXData, gpx_dist, write_speed: bool = False) -> None:
     """
     Writes a GPX file with a GPXData structure, including speed if write_speed is True.
     """
@@ -169,6 +169,7 @@ def gpx_write(gpx_file: str, gpx_data: GPXData, write_speed: bool = False) -> No
             raise ValueError('tstamp data is missing from gpx_data')
 
         gpx_speed = gpx_calculate_speed(gpx_data)
+
 
     gpx = gpxpy.gpx.GPX()
     gpx_track = gpxpy.gpx.GPXTrack()
@@ -204,12 +205,12 @@ def main():
     parser = argparse.ArgumentParser(description='interpolate GPX files using piecewise cubic Hermite splines')
 
     parser.add_argument('gpx_files', metavar='FILE', nargs='+', help='GPX file')
-    parser.add_argument('-d', '--distance', type=float, default=1.0, help='set fixed distance (interpolation resolution) between track points [m] (default: 1)')
-    parser.add_argument('-n', '--num', type=int, default=None, help='force point count in output (default: disabled)')
-    parser.add_argument('-s', '--speed', action='store_true', help='save interpolated speed')
+    parser.add_argument('-d', '--distance', type=float, default=1.0, help='set constant distance (interpolation resolution) between track points [m] (default: 1 m)')
+    parser.add_argument('-n', '--num', type=int, default=None, help='force number of track points (default: disabled)')
     parser.add_argument('-i', '--intervaltime', type=float, help='set constant time interval [s] between track points')
     parser.add_argument('-v', '--velocity', type=float, help='set constant velocity [m/s] between track points')
-    parser.add_argument('-b', '--begintime', type=float, help='set track begin time')
+    parser.add_argument('-s', '--speed', action='store_true', help='add speed data to track')
+    parser.add_argument('-b', '--begintime', help='set track begin time UTC [YYYYMMDD-HHMMSSZ]')
 
     args = parser.parse_args()
 
@@ -228,13 +229,16 @@ def main():
 
             gpx_dist = gpx_calculate_distance(gpx_data, use_ele=True)
 
+            if args.begintime:
+                dt_utc = datetime.strptime( args.begintime, "%Y%m%d-%H%M%SZ").timestamp() - datetime(1970, 1, 1).timestamp()
+                deltatime = dt_utc - gpx_data['tstamp'][0]
+                for i in range(len(gpx_data['lat']) ):
+                    gpx_data['tstamp'][i] = gpx_data['tstamp'][i] + deltatime
+
             if args.velocity and args.velocity > 0.0:
                 gpx_dtstamps = np.divide(gpx_dist, args.velocity)
                 for i in range(len(gpx_data['lat']) - 1):
                     gpx_data['tstamp'][i+1] = gpx_data['tstamp'][i]+gpx_dtstamps[i+1]
-
-#            if begintime:
-#                gpx_data['tstamp'][0]=
 
             if args.intervaltime and args.intervaltime > 0.0:
                 for i in range(len(gpx_data['lat']) - 1):
@@ -257,7 +261,7 @@ def main():
 
             output_file = '{}_interpolated.gpx'.format(gpx_file[:-4])
 
-            gpx_write(output_file, gpx_data_interp, write_speed=args.speed)
+            gpx_write(output_file, gpx_data_interp, gpx_dist, write_speed=args.speed)
 
             print('{} trackpoints were written to {}'.format(len(gpx_data_interp['lat']), output_file))
 
