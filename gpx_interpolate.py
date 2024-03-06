@@ -76,6 +76,7 @@ def gpx_calculate_distance(gpx_data: GPXData, use_ele: bool = True) -> List[floa
 
     return gpx_dist.tolist()
 
+
 def gpx_calculate_speed(gpx_data: GPXData) -> List[float]:
     """
     Returns the speed between GPX trackpoints.
@@ -89,6 +90,7 @@ def gpx_calculate_speed(gpx_data: GPXData) -> List[float]:
     gpx_speed = np.nan_to_num(gpx_dist/gpx_dtstamp, nan=0.0)
 
     return gpx_speed.tolist()
+
 
 def gpx_remove_duplicates(gpx_data: GPXData) -> GPXData:
     """
@@ -224,11 +226,40 @@ def main():
 
             gpx_data_interp = gpx_interpolate(gpx_data_nodup, args.distance, args.num)
 
+            gpx_dist = gpx_calculate_distance(gpx_data, use_ele=True)
+
+            if args.velocity and args.velocity > 0.0:
+                gpx_dtstamps = np.divide(gpx_dist, args.velocity)
+                for i in range(len(gpx_data['lat']) - 1):
+                    gpx_data['tstamp'][i+1] = gpx_data['tstamp'][i]+gpx_dtstamps[i+1]
+
+#            if begintime:
+#                gpx_data['tstamp'][0]=
+
+            if args.intervaltime and args.intervaltime > 0.0:
+                for i in range(len(gpx_data['lat']) - 1):
+                    gpx_data['tstamp'][i+1] = gpx_data['tstamp'][i]+args.intervaltime
+
+            starttime = datetime.utcfromtimestamp(gpx_data['tstamp'][0]).isoformat()
+            endtime = datetime.utcfromtimestamp(gpx_data['tstamp'][-1]).isoformat()
+
+            accumulateddistance = np.sum(gpx_dist)
+            print( 'Accumulated distance: {0:.2f} m'.format( accumulateddistance ) )
+
+            print( 'Track start time:     {}Z'.format( starttime ) )
+            print( 'Track end time:       {}Z'.format( endtime ) )
+
+            totaltime = gpx_data['tstamp'][-1] - gpx_data['tstamp'][0]
+            print( 'Total time:           {0:.2f} s'.format( totaltime ) )
+
+            averagespeed = accumulateddistance/totaltime
+            print( 'Average speed:        {0:.2f} m/s ({1:.2f} km/h)'.format( averagespeed, averagespeed*3.6 ) )
+
             output_file = '{}_interpolated.gpx'.format(gpx_file[:-4])
 
             gpx_write(output_file, gpx_data_interp, write_speed=args.speed)
 
-            print('Saved {} trackpoints to {}'.format(len(gpx_data_interp['lat']), output_file))
+            print('{} trackpoints were written to {}'.format(len(gpx_data_interp['lat']), output_file))
 
 if __name__ == '__main__':
     main()
