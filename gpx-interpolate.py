@@ -1,7 +1,53 @@
+"""
+
+gpx-interpolate.py
+- forked from remisalmon/gpx-interpolate
+
+Python script to interpolate GPX files using piecewise cubic Hermite splines.
+
+Interpolates latitude, longitude, elevation and speed at any spatial resolution.
+
+User command line options:
+
+- define total number of the new interpolated track points ; or
+- define track points in constant distance steps
+
+Optionally you can define
+
+- constant speed (e. g. 1 m/s]; or
+- constant time intervals between track points (e.g. define a point every second)
+- set (or overwrite existing) start track time (optional) e.g 20240201-120000Z
+
+Output shows
+
+- start and end time based on input parameters
+- total track length
+- total track travel time based on the given speed or time interval data
+
+## Usage
+
+usage: gpx-interpolate.py [-h] [-d DISTANCE] [-n NUM] [-i INTERVALTIME] [-v VELOCITY] [-s] [-b BEGINTIME] FILE [FILE ...]
+
+interpolate GPX files using piecewise cubic Hermite splines
+
+positional arguments:
+  FILE                  GPX file
+
+options:
+  -h, --help            show this help message and exit
+  -d DISTANCE, --distance DISTANCE
+                        set constant distance (interpolation resolution) between track points [m] (default: 1 m)
+  -n NUM, --num NUM     force number of track points (default: disabled)
+  -i INTERVALTIME, --intervaltime INTERVALTIME
+                        set constant time interval [s] between track points
+  -v VELOCITY, --velocity VELOCITY
+                        set constant velocity [m/s] between track points
+  -s, --speed           add speed data to track
+  -b BEGINTIME, --begintime BEGINTIME
+                        set track begin time UTC [YYYYMMDD-HHMMSSZ]
+"""
+
 # imports
-
-# Source github.com/remisalmon/gpx-interpolate
-
 import gpxpy
 import numpy as np
 from datetime import datetime, tzinfo
@@ -19,7 +65,6 @@ EPS = 1e-6 # seconds
 def gpx_interpolate(gpx_data: GPXData, distance: float = 1.0, num: Optional[int] = None) -> GPXData:
     """
     Returns gpx_data interpolated with a spatial resolution distance using piecewise cubic Hermite splines.
-
     if num is passed, gpx_data is interpolated to num points and distance is ignored.
     """
 
@@ -48,7 +93,6 @@ def gpx_interpolate(gpx_data: GPXData, distance: float = 1.0, num: Optional[int]
 def gpx_calculate_distance(gpx_data: GPXData, use_ele: bool = True) -> List[float]:
     """
     Returns the distance between GPX trackpoints.
-
     if use_ele is True and gpx_data['ele'] is not None, the elevation data is used to compute the distance.
     """
 
@@ -230,19 +274,28 @@ def main():
             gpx_dist = gpx_calculate_distance(gpx_data, use_ele=True)
 
             if args.begintime:
+
                 dt_utc = datetime.strptime( args.begintime, "%Y%m%d-%H%M%SZ").timestamp() - datetime(1970, 1, 1).timestamp()
                 deltatime = dt_utc - gpx_data['tstamp'][0]
-                for i in range(len(gpx_data['lat']) ):
-                    gpx_data['tstamp'][i] = gpx_data['tstamp'][i] + deltatime
+                gpx_data['tstamp'][0] = gpx_data['tstamp'][0] + deltatime
 
             if args.velocity and args.velocity > 0.0:
+
                 gpx_dtstamps = np.divide(gpx_dist, args.velocity)
                 for i in range(len(gpx_data['lat']) - 1):
                     gpx_data['tstamp'][i+1] = gpx_data['tstamp'][i]+gpx_dtstamps[i+1]
 
             if args.intervaltime and args.intervaltime > 0.0:
+
                 for i in range(len(gpx_data['lat']) - 1):
                     gpx_data['tstamp'][i+1] = gpx_data['tstamp'][i]+args.intervaltime
+
+            elif not args.velocity:
+
+                for i in range(len(gpx_data['lat']) ):
+                    gpx_data['tstamp'][i] = gpx_data['tstamp'][i] + deltatime
+
+
 
             starttime = datetime.utcfromtimestamp(gpx_data['tstamp'][0]).isoformat()
             endtime = datetime.utcfromtimestamp(gpx_data['tstamp'][-1]).isoformat()
