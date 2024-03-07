@@ -277,7 +277,9 @@ def main():
 
                 dt_utc = datetime.strptime( args.begintime, "%Y%m%d-%H%M%SZ").timestamp() - datetime(1970, 1, 1).timestamp()
                 deltatime = dt_utc - gpx_data['tstamp'][0]
-                gpx_data['tstamp'][0] = gpx_data['tstamp'][0] + deltatime
+
+                for i in range(len(gpx_data['lat']) ):
+                    gpx_data['tstamp'][i] = gpx_data['tstamp'][i] + deltatime
 
             if args.velocity and args.velocity > 0.0:
 
@@ -289,12 +291,6 @@ def main():
 
                 for i in range(len(gpx_data['lat']) - 1):
                     gpx_data['tstamp'][i+1] = gpx_data['tstamp'][i]+args.intervaltime
-
-            elif not args.velocity:
-
-                for i in range(len(gpx_data['lat']) ):
-                    gpx_data['tstamp'][i] = gpx_data['tstamp'][i] + deltatime
-
 
 
             starttime = datetime.utcfromtimestamp(gpx_data['tstamp'][0]).isoformat()
