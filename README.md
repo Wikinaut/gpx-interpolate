@@ -1,14 +1,31 @@
-# gpx_interpolate.py
+# gpx-interpolate.py
 
 Python script to interpolate GPX files using piecewise cubic Hermite splines.
 
 Interpolates latitude, longitude, elevation and speed at any spatial resolution.
 
+User command line options:
+
+- define total number of the new interpolated track points ; or
+- define track points in constant distance steps
+
+Optionally you can define
+
+- constant speed (e. g. 1 m/s]; or
+- constant time intervals between track points (e.g. define a point every second)
+- set (or overwrite existing) start track time (optional) e.g 20240201-120000Z
+
+Output shows
+
+- start and end time based on input parameters
+- total track length
+- total track travel time based on the given speed or time interval data
+
 ## Usage
 
 ### Script
 ```
-usage: gpx_interpolate.py [-h] [-d DISTANCE] [-n NUM] [-i INTERVALTIME] [-v VELOCITY] [-s] [-b BEGINTIME] FILE [FILE ...]
+usage: gpx-interpolate.py [-h] [-d DISTANCE] [-n NUM] [-i INTERVALTIME] [-v VELOCITY] [-s] [-b BEGINTIME] FILE [FILE ...]
 
 interpolate GPX files using piecewise cubic Hermite splines
 
@@ -31,7 +48,7 @@ options:
 
 ### Module
 ```python
-from gpx_interpolate import gpx_interpolate
+from gpx-interpolate import gpx_interpolate
 
 gpx_data = {'lat':lat,
             'lon':lon,
