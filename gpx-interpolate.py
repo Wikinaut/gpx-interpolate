@@ -17,7 +17,7 @@ User command line options:
 
 Optionally you can define
 
-- constant speed (e. g. 1 m/s]; or
+- constant speed (e. g. 1 m/s); or
 - constant time intervals between track points (e.g. define a point every second)
 - set (or overwrite existing) start track time (optional) e.g 20240201-120000Z
 
