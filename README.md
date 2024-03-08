@@ -70,7 +70,7 @@ where:
 `ele`, `tstamp` and `tzinfo` are optional and can be set to `None`.
 
 ### Example
-:black_circle: = input GPX data, :red_circle: = interpolated GPX data  
+:red_circle: input GPX data, :green_circle: interpolated GPX data every 50 km (d=50000) :blue_circle: interpolated GPX data 10 points (n=10)
 ![plot.png](plot.png)
 
 ## Test
