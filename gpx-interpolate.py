@@ -257,7 +257,7 @@ def main():
     parser.add_argument('-d', '--distance', type=float, default=1.0, help='set constant distance (interpolation resolution) between track points [m] (default: 1 m)')
     parser.add_argument('-n', '--num', type=int, default=None, help='force number of track points (default: disabled)')
     parser.add_argument('-i', '--intervaltime', type=float, help='set constant time interval [s] between track points')
-    parser.add_argument('-v', '--velocity', type=float, help='set constant velocity [m/s] between track points')
+    parser.add_argument('-v', '--velocity', default=1.0, type=float, help='set constant velocity [m/s] between track points')
     parser.add_argument('-s', '--speed', action='store_true', help='add speed data to track')
     parser.add_argument('-b', '--begintime', help='set track begin time UTC [YYYYMMDD-HHMMSSZ]')
 
