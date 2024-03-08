@@ -1,7 +1,10 @@
+#!/usr/bin/env python3
 """
 
 gpx-interpolate.py
+
 - forked from remisalmon/gpx-interpolate
+- 20240308
 
 Python script to interpolate GPX files using piecewise cubic Hermite splines.
 
@@ -50,7 +53,7 @@ options:
 # imports
 import gpxpy
 import numpy as np
-from datetime import datetime, tzinfo
+from datetime import datetime, tzinfo, timezone
 from typing import Dict, List, Union, Optional
 from scipy.interpolate import pchip_interpolate
 
@@ -113,7 +116,6 @@ def gpx_calculate_distance(gpx_data: GPXData, use_ele: bool = True) -> List[floa
 
         if gpx_data['ele'] and use_ele:
             dist_ele = gpx_data['ele'][i+1]-gpx_data['ele'][i]
-
             gpx_dist[i+1] = np.sqrt(dist_latlon**2+dist_ele**2)
         else:
             gpx_dist[i+1] = dist_latlon
@@ -161,7 +163,7 @@ def gpx_read(gpx_file: str) -> GPXData:
     Returns a GPXData structure from a GPX file.
     """
 
-    gpx_data = {'lat': [], 'lon': [], 'ele': [], 'tstamp': [], 'tzinfo': None}
+    gpx_data = {'lat': [], 'lon': [], 'ele': [], 'tstamp': [], 'tzinfo': None }
 
     i = 0
     i_latlon = []
@@ -178,27 +180,30 @@ def gpx_read(gpx_file: str) -> GPXData:
 
                     i_latlon.append(i)
 
-                    try:
+                    if point.elevation is not None:
                         gpx_data['ele'].append(point.elevation)
-                    except:
-                        pass
+                    else:
+                        gpx_data['ele'].append(0.0)
+
+                    if point.time is not None:
+                        gpx_data['tstamp'].append(point.time.timestamp())
+                    else:
+                        gpx_data['tstamp'].append(0.0) ## set timestamp dummy
 
                     try:
-                        gpx_data['tstamp'].append(point.time.timestamp())
+                        gpx_data['tzinfo'] = point.time.tzinfo
                     except:
-                        pass
-                    else:
-                        if not gpx_data['tzinfo']:
-                            gpx_data['tzinfo'] = point.time.tzinfo
+                        gpx_data['tzinfo'] = timezone.utc
 
-                        i_tstamp.append(i)
+                    #   i_tstamp.append(i)
+                    # i += 1
 
-                    i += 1
-
+    """
     # remove trackpoints without tstamp
     if i_tstamp and not len(i_latlon) == len(i_tstamp):
         for k in ('lat', 'lon', 'ele', 'tstamp'):
             gpx_data[k] = [gpx_data[k][i] for i in i_tstamp] if gpx_data[k] else None
+    """
 
     return gpx_data
 
